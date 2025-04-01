@@ -1,0 +1,45 @@
+import lejos.hardware.Button;
+import lejos.hardware.motor.Motor;
+import lejos.hardware.port.SensorPort;
+import lejos.hardware.sensor.EV3ColorSensor;
+import lejos.robotics.SampleProvider;
+
+public class StayInsideSquare {
+    public static void main(String[] args) throws InterruptedException {
+        // Initialize color sensor
+        EV3ColorSensor colorSensor = new EV3ColorSensor(SensorPort.S2);
+        SampleProvider color = colorSensor.getRedMode(); // Use red light intensity
+        float[] sample = new float[color.sampleSize()];
+
+        while (!Button.ESCAPE.isDown()) {
+            // Move forward
+            Motor.A.forward();
+            Motor.B.forward();
+
+            // Check color sensor for black line
+            color.fetchSample(sample, 0);
+            if (sample[0] < 0.1) { // If a black line is detected (adjust threshold if needed)
+                // Stop motors
+                Motor.A.stop();
+                Motor.B.stop();
+
+                // Reverse a little
+                Motor.A.backward();
+                Motor.B.backward();
+                Thread.sleep(500);
+
+                // Turn randomly (left or right)
+                if (Math.random() > 0.5) {
+                    Motor.A.forward();
+                    Motor.B.backward();
+                } else {
+                    Motor.A.backward();
+                    Motor.B.forward();
+                }
+                Thread.sleep(500);
+            }
+        }
+
+        colorSensor.close();
+    }
+}

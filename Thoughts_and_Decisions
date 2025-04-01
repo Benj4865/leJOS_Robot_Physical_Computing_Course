@@ -15,7 +15,8 @@ This is why we have not tested all parts of the code fully yet. (Task 1-3 have s
 
 Robot Design:
 The robot was designed from the start, to be as simple as possible. The robnot uses a reverse tail-dragger setup, negating the need for a swiveling wheel at the tail/front of the robot.
-I also only uses two driven wheel, using skid-steering to control the yaw of the robot.
+I also only uses two driven wheel, using skid-steering to control the yaw of the robot. We placed the touch-sensor and the color-sensor in the front of the robot, to make sure that obstacles and lines
+are detected before the robot collides with them. The motors are placed in the back, making the front of the robot swing a lot when turning, but we thought that is was worth it.
 
 Program Design:
 We had some issues setting up a behaviour-like setup in our code. Because of the limited development time, we opted for a simple while-loop to run all our code in.

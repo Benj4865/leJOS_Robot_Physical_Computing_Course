@@ -1,0 +1,135 @@
+import java.util.Random;
+import lejos.hardware.Button;
+import lejos.hardware.Sound;
+import lejos.hardware.lcd.LCD;
+import lejos.hardware.motor.Motor;
+import lejos.hardware.port.SensorPort;
+import lejos.hardware.sensor.EV3ColorSensor;
+import lejos.hardware.sensor.EV3IRSensor;
+import lejos.hardware.sensor.EV3TouchSensor;
+import lejos.robotics.Color;
+import lejos.robotics.SampleProvider;
+import lejos.utility.Delay;
+
+public class RobotMultiFunctionIR {
+    public static void main(String[] args) throws InterruptedException {
+        // Initialize sensors
+        EV3ColorSensor colorSensor = new EV3ColorSensor(SensorPort.S2);
+        SampleProvider colorProvider = colorSensor.getColorIDMode();
+        
+        EV3TouchSensor touchSensor = new EV3TouchSensor(SensorPort.S1);
+        SampleProvider touch = touchSensor.getMode("Touch");
+        float[] touchSample = new float[touch.sampleSize()];
+
+        EV3IRSensor irSensor = new EV3IRSensor(SensorPort.S3); // IR Sensor on port S3
+        SampleProvider irSeek = irSensor.getSeekMode(); // Detects beacon direction
+        float[] irSample = new float[irSeek.sampleSize()];
+
+        Random rand = new Random();
+        boolean lowBattery = false;
+
+        while (!Button.ESCAPE.isDown()) {
+            // Simulate low battery
+            if (Button.ENTER.isDown() || rand.nextDouble() < 0.01) { // 1% chance per loop
+                lowBattery = true;
+                LCD.clear();
+                LCD.drawString("Low Battery!", 0, 2);
+                Sound.beepSequenceUp();
+                Motor.A.stop();
+                Motor.B.stop();
+                Delay.msDelay(1000);
+            }
+
+            if (!lowBattery) {
+                // Move forward
+                Motor.A.forward();
+                Motor.B.forward();
+
+                // Read sensor values
+                int detectedColor = colorSensor.getColorID();
+                touch.fetchSample(touchSample, 0);
+                
+                // 1. Stay Inside Square (Detect Black Line)
+                if (detectedColor == Color.BLACK) {
+                    Motor.A.stop();
+                    Motor.B.stop();
+                    Motor.A.backward();
+                    Motor.B.backward();
+                    Delay.msDelay(500);
+
+                    // Turn randomly
+                    if (Math.random() > 0.5) {
+                        Motor.A.forward();
+                        Motor.B.backward();
+                    } else {
+                        Motor.A.backward();
+                        Motor.B.forward();
+                    }
+                    Delay.msDelay(500);
+                }
+                
+                // 2. Avoid Obstacles (Detect Collision with Bumper)
+                if (touchSample[0] == 1) {
+                    Motor.A.stop();
+                    Motor.B.stop();
+                    Motor.A.backward();
+                    Motor.B.backward();
+                    Delay.msDelay(500);
+
+                    // Turn randomly
+                    if (Math.random() > 0.5) {
+                        Motor.A.forward();
+                        Motor.B.backward();
+                    } else {
+                        Motor.A.backward();
+                        Motor.B.forward();
+                    }
+                    Delay.msDelay(600);
+                }
+                
+                // 3. Find Stickers (Only Detect Blue)
+                if (detectedColor == Color.BLUE) {
+                    Motor.A.stop();
+                    Motor.B.stop();
+                    LCD.clear();
+                    LCD.drawString("Found BLUE!", 0, 2);
+                    Sound.beep();
+                    Delay.msDelay(2000);
+                    LCD.clear();
+                }
+            } else {
+                // 4. Return to Base Using IR Sensor (Locate Beacon)
+                irSeek.fetchSample(irSample, 0);
+                float beaconDirection = irSample[0]; // -25 to 25 degrees
+                float beaconDistance = irSample[1];  // Distance estimate
+
+                if (beaconDistance > 0 && beaconDistance < 10) { // Close enough to stop
+                    LCD.clear();
+                    LCD.drawString("Base Found!", 0, 2);
+                    Sound.beepSequence();
+                    Motor.A.stop();
+                    Motor.B.stop();
+                    break; // Stay at base
+                } else {
+                    // Adjust direction towards beacon
+                    if (beaconDirection < -2) {
+                        Motor.A.forward();
+                        Motor.B.backward(); // Turn right
+                    } else if (beaconDirection > 2) {
+                        Motor.A.backward();
+                        Motor.B.forward(); // Turn left
+                    } else {
+                        Motor.A.forward();
+                        Motor.B.forward(); // Move straight
+                    }
+                    Delay.msDelay(300);
+                }
+            }
+        }
+
+        // Close sensors
+        colorSensor.close();
+        touchSensor.close();
+        irSensor.close();
+    }
+}

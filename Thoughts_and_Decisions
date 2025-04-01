@@ -10,7 +10,7 @@ The windows firewall blocks communication with the Brick's Ip-address when conne
 the brick cannot communicate with Eclipse. Furthermore, windows detects the Brick on its COM-ports but seems inable to communicate to a specific IP-adress over
 the serial connection of the COM-ports. And since the eclipse plugin needs an IP-adress or physical location, we cannot specify where excatly the brick is connected.
 We "wasted" many hours on tourbleshooting the linux install and setup of the leJOS plugin in eclipse, and therefore had less time to program it.
-This is why we have not tested all parts of the code fully yet. But we have gotten quite good at linux commands tho.
+This is why we have not tested all parts of the code fully yet. (Task 1-3 have sucessfully been tested) But we have gotten quite good at linux commands tho.
 
 
 Robot Design:
@@ -18,4 +18,7 @@ The robot was designed from the start, to be as simple as possible. The robnot u
 I also only uses two driven wheel, using skid-steering to control the yaw of the robot.
 
 Program Design:
-We had some issues setting up a behaviour-like setup in our code. Because of the limite
+We had some issues setting up a behaviour-like setup in our code. Because of the limited development time, we opted for a simple while-loop to run all our code in.
+We then "listen" to the diffrent sensors to detect if any of the specified conditions are met. In most cases, the respones to a collision or detection of line, is to back up slightly and turn a bit. then proceed forward.
+We have also created a seperate java-class for each of the tasks except for the last one, where we just collected all the code in one class. Unfortunately the last unspecified behaviour have not been created.
+An idea for a new behaviour could be that when finding a line on the ground, the robot would follow the line by sweeping over the line continuously and course-corrincting when the line is lost.

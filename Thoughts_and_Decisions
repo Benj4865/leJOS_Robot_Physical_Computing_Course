@@ -1,0 +1,17 @@
+Below is a list of Thoughts on diffrent parts of the 
+
+
+General learnings:
+First of all, ChatGPT has been a great assistant in learning the ways of the Brick and how to harness its mystical powers.
+While most of the code itself have been written by us, som parts have been corrected or written by the Great Coder in the sky.
+By far the biggest issues for us, lays in setting up the Linux environment  to run the program. We did not get a computer that worked,
+and had to install one on our own. While we have not yet succeded in running the software on windows 11, I might have located the issued.
+The windows firewall blocks communication with the Brick's Ip-address when connecting at first, and without making an exception in your firewall settings,
+the brick cannot communicate with Eclipse. Furthermore, windows detects the Brick on its COM-ports but seems inable to communicate to a specific IP-adress over
+the serial connection of the COM-ports. And since the eclipse plugin needs an IP-adress or physical location, we cannot specify where excatly the brick is connected.
+
+
+
+Robot Design:
+
+Program Design:

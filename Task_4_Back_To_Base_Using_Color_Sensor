@@ -1,0 +1,58 @@
+import java.util.Random;
+import lejos.hardware.Button;
+import lejos.hardware.Sound;
+import lejos.hardware.lcd.LCD;
+import lejos.hardware.motor.Motor;
+import lejos.hardware.port.SensorPort;
+import lejos.hardware.sensor.EV3ColorSensor;
+import lejos.robotics.SampleProvider;
+import lejos.utility.Delay;
+
+public class ReturnToBase {
+    public static void main(String[] args) throws InterruptedException {
+        // Initialize the color sensor
+        EV3ColorSensor colorSensor = new EV3ColorSensor(SensorPort.S2);
+        SampleProvider colorProvider = colorSensor.getColorIDMode(); // Detect color
+        Random rand = new Random();
+
+        boolean lowBattery = false;
+
+        while (!Button.ESCAPE.isDown()) {
+            // Simulate low battery
+            if (Button.ENTER.isDown() || rand.nextDouble() < 0.01) { // 1% chance per loop
+                lowBattery = true;
+                LCD.drawString("Low Battery!", 0, 2);
+                Sound.beepSequenceUp();
+                Motor.A.stop();
+                Motor.B.stop();
+                Delay.msDelay(1000);
+            }
+
+            if (!lowBattery) {
+                // Move forward normally
+                Motor.A.forward();
+                Motor.B.forward();
+            } else {
+                // Search for base (a specific color)
+                int detectedColor = colorSensor.getColorID();
+                
+                if (detectedColor == lejos.robotics.Color.GREEN) { // Example: Green = Base
+                    LCD.clear();
+                    LCD.drawString("Base Found!", 0, 2);
+                    Sound.beepSequence();
+                    Motor.A.stop();
+                    Motor.B.stop();
+                    break; // Stay at base
+                } else {
+                    // Keep turning to look for base
+                    Motor.A.backward();
+                    Motor.B.forward();
+                    Delay.msDelay(300);
+                }
+            }
+        }
+
+        // Close the sensor
+        colorSensor.close();
+    }
+}

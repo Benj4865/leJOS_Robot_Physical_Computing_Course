@@ -1,0 +1,53 @@
+import lejos.hardware.Button;
+import lejos.hardware.Sound;
+import lejos.hardware.lcd.LCD;
+import lejos.hardware.motor.Motor;
+import lejos.hardware.port.SensorPort;
+import lejos.hardware.sensor.EV3ColorSensor;
+import lejos.robotics.Color;
+import lejos.robotics.SampleProvider;
+
+public class FindSticker {
+    public static void main(String[] args) throws InterruptedException {
+        // Initialize the color sensor
+        EV3ColorSensor colorSensor = new EV3ColorSensor(SensorPort.S2);
+        SampleProvider colorProvider = colorSensor.getColorIDMode(); // Detect color by ID
+
+        while (!Button.ESCAPE.isDown()) {
+            // Move forward on both motors
+            Motor.A.forward();
+            Motor.B.forward();
+
+            // Get color sample
+            int detectedColor = colorSensor.getColorID();
+
+            // Check for a sticker (adjust color based on testing)
+            if (detectedColor == Color.BLUE || detectedColor == Color.RED) { // Example colors
+                // Stop moving
+                Motor.A.stop();
+                Motor.B.stop();
+
+                // Announce detection
+                LCD.clear();
+                if (detectedColor == Color.BLUE) {
+                    LCD.drawString("Found BLUE!", 0, 2);
+                    Sound.beep();
+                } else if (detectedColor == Color.RED) {
+                    LCD.drawString("Found RED!", 0, 2);
+                    Sound.beepSequence();
+                }
+
+                // Wait a bit before moving again
+                Thread.sleep(2000);
+                LCD.clear();
+
+                // Resume moving
+                Motor.A.forward();
+                Motor.B.forward();
+            }
+        }
+
+        // Close the sensor
+        colorSensor.close();
+    }
+}

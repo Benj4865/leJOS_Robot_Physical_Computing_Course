@@ -9,9 +9,13 @@ and had to install one on our own. While we have not yet succeded in running the
 The windows firewall blocks communication with the Brick's Ip-address when connecting at first, and without making an exception in your firewall settings,
 the brick cannot communicate with Eclipse. Furthermore, windows detects the Brick on its COM-ports but seems inable to communicate to a specific IP-adress over
 the serial connection of the COM-ports. And since the eclipse plugin needs an IP-adress or physical location, we cannot specify where excatly the brick is connected.
-
+We "wasted" many hours on tourbleshooting the linux install and setup of the leJOS plugin in eclipse, and therefore had less time to program it.
+This is why we have not tested all parts of the code fully yet. But we have gotten quite good at linux commands tho.
 
 
 Robot Design:
+The robot was designed from the start, to be as simple as possible. The robnot uses a reverse tail-dragger setup, negating the need for a swiveling wheel at the tail/front of the robot.
+I also only uses two driven wheel, using skid-steering to control the yaw of the robot.
 
 Program Design:
+We had some issues setting up a behaviour-like setup in our code. Because of the limite

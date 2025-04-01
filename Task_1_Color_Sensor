@@ -6,13 +6,17 @@ import lejos.robotics.SampleProvider;
 
 public class StayInsideSquare {
     public static void main(String[] args) throws InterruptedException {
+        
         // Initialize color sensor
         EV3ColorSensor colorSensor = new EV3ColorSensor(SensorPort.S2);
-        SampleProvider color = colorSensor.getRedMode(); // Use red light intensity
+ 
+        // Use red light intensity
+        SampleProvider color = colorSensor.getRedMode();
         float[] sample = new float[color.sampleSize()];
 
         while (!Button.ESCAPE.isDown()) {
-            // Move forward
+            
+            // Move forward on both motors
             Motor.A.forward();
             Motor.B.forward();
 

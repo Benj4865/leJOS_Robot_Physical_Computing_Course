@@ -1,0 +1,44 @@
+import lejos.hardware.Button;
+import lejos.hardware.motor.Motor;
+import lejos.hardware.port.SensorPort;
+import lejos.hardware.sensor.EV3TouchSensor;
+import lejos.robotics.SampleProvider;
+
+public class EscapeRoom {
+    public static void main(String[] args) {
+        EV3TouchSensor touchSensor = new EV3TouchSensor(SensorPort.S1);
+        SampleProvider touch = touchSensor.getMode("Touch");
+        float[] sample = new float[touch.sampleSize()];
+
+        while (!Button.ESCAPE.isDown()) {
+            // Move forward on both motors
+            Motor.A.forward();
+            Motor.B.forward();
+
+            // Checking for collisions
+            touch.fetchSample(sample, 0);
+            if (sample[0] == 1) { // If bumper is pressed
+                // Stop motors
+                Motor.A.stop();
+                Motor.B.stop();
+
+                // Reverse a little
+                Motor.A.backward();
+                Motor.B.backward();
+                Thread.sleep(500);
+
+                // Turn randomly (left or right)
+                if (Math.random() > 0.5) {
+                    Motor.A.forward();
+                    Motor.B.backward();
+                } else {
+                    Motor.A.backward();
+                    Motor.B.forward();
+                }
+                Thread.sleep(500);
+            }
+        }
+
+        touchSensor.close();
+    }
+}

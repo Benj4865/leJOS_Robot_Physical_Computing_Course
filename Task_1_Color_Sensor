@@ -22,7 +22,10 @@ public class StayInsideSquare {
 
             // Check color sensor for black line
             color.fetchSample(sample, 0);
-            if (sample[0] < 0.1) { // If a black line is detected (adjust threshold if needed)
+            
+        // If a black line is detected (adjust threshold if needed)
+        if (sample[0] < 0.1) {
+                
                 // Stop motors
                 Motor.A.stop();
                 Motor.B.stop();

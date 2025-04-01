@@ -13,41 +13,44 @@ import lejos.utility.Delay;
 
 public class RobotMultiFunctionIR {
     public static void main(String[] args) throws InterruptedException {
-        // Initialize sensors
+        // Initialize the color sensor (used for detecting the black line and blue stickers)
         EV3ColorSensor colorSensor = new EV3ColorSensor(SensorPort.S2);
-        SampleProvider colorProvider = colorSensor.getColorIDMode();
-        
+        SampleProvider colorProvider = colorSensor.getColorIDMode(); // Gets color as an ID
+
+        // Initialize the touch sensor (used as a bumper to detect obstacles)
         EV3TouchSensor touchSensor = new EV3TouchSensor(SensorPort.S1);
-        SampleProvider touch = touchSensor.getMode("Touch");
-        float[] touchSample = new float[touch.sampleSize()];
+        SampleProvider touch = touchSensor.getMode("Touch"); // Get "Touch" mode (1 if pressed)
+        float[] touchSample = new float[touch.sampleSize()]; // Buffer for sensor data
 
-        EV3IRSensor irSensor = new EV3IRSensor(SensorPort.S3); // IR Sensor on port S3
-        SampleProvider irSeek = irSensor.getSeekMode(); // Detects beacon direction
-        float[] irSample = new float[irSeek.sampleSize()];
+        // Initialize the infrared sensor (used to locate the beacon for "base")
+        EV3IRSensor irSensor = new EV3IRSensor(SensorPort.S3);
+        SampleProvider irSeek = irSensor.getSeekMode(); // Detects beacon direction and distance
+        float[] irSample = new float[irSeek.sampleSize()]; // Buffer for sensor data
 
+        // Create a random generator for simulating battery depletion
         Random rand = new Random();
-        boolean lowBattery = false;
+        boolean lowBattery = false; // Tracks if the robot is in low battery mode
 
-        while (!Button.ESCAPE.isDown()) {
-            // Simulate low battery
+        while (!Button.ESCAPE.isDown()) { // Run until the ESCAPE button is pressed
+            // Simulate battery running low
             if (Button.ENTER.isDown() || rand.nextDouble() < 0.01) { // 1% chance per loop
                 lowBattery = true;
                 LCD.clear();
                 LCD.drawString("Low Battery!", 0, 2);
-                Sound.beepSequenceUp();
+                Sound.beepSequenceUp(); // Play a sound indicating low battery
                 Motor.A.stop();
                 Motor.B.stop();
-                Delay.msDelay(1000);
+                Delay.msDelay(1000); // Pause before switching to base-finding mode
             }
 
-            if (!lowBattery) {
-                // Move forward
+            if (!lowBattery) { // Normal operation mode
+                // Move forward continuously
                 Motor.A.forward();
                 Motor.B.forward();
 
                 // Read sensor values
                 int detectedColor = colorSensor.getColorID();
-                touch.fetchSample(touchSample, 0);
+                touch.fetchSample(touchSample, 0); // Get touch sensor status
                 
                 // 1. Stay Inside Square (Detect Black Line)
                 if (detectedColor == Color.BLACK) {
@@ -55,79 +58,78 @@ public class RobotMultiFunctionIR {
                     Motor.B.stop();
                     Motor.A.backward();
                     Motor.B.backward();
-                    Delay.msDelay(500);
+                    Delay.msDelay(500); // Move backward slightly
 
-                    // Turn randomly
+                    // Turn randomly to stay inside the square
                     if (Math.random() > 0.5) {
                         Motor.A.forward();
-                        Motor.B.backward();
+                        Motor.B.backward(); // Turn right
                     } else {
                         Motor.A.backward();
-                        Motor.B.forward();
+                        Motor.B.forward(); // Turn left
                     }
                     Delay.msDelay(500);
                 }
                 
                 // 2. Avoid Obstacles (Detect Collision with Bumper)
-                if (touchSample[0] == 1) {
+                if (touchSample[0] == 1) { // If bumper switch is pressed
                     Motor.A.stop();
                     Motor.B.stop();
                     Motor.A.backward();
                     Motor.B.backward();
-                    Delay.msDelay(500);
+                    Delay.msDelay(500); // Move backward slightly
 
-                    // Turn randomly
+                    // Turn randomly to navigate around the obstacle
                     if (Math.random() > 0.5) {
                         Motor.A.forward();
-                        Motor.B.backward();
+                        Motor.B.backward(); // Turn right
                     } else {
                         Motor.A.backward();
-                        Motor.B.forward();
+                        Motor.B.forward(); // Turn left
                     }
                     Delay.msDelay(600);
                 }
                 
                 // 3. Find Stickers (Only Detect Blue)
-                if (detectedColor == Color.BLUE) {
+                if (detectedColor == Color.BLUE) { // Detects a blue sticker
                     Motor.A.stop();
                     Motor.B.stop();
                     LCD.clear();
                     LCD.drawString("Found BLUE!", 0, 2);
-                    Sound.beep();
+                    Sound.beep(); // Alert when a blue sticker is found
                     Delay.msDelay(2000);
                     LCD.clear();
                 }
-            } else {
-                // 4. Return to Base Using IR Sensor (Locate Beacon)
-                irSeek.fetchSample(irSample, 0);
-                float beaconDirection = irSample[0]; // -25 to 25 degrees
-                float beaconDistance = irSample[1];  // Distance estimate
+            } else { // Low Battery Mode: Find Base Using IR Sensor
+                irSeek.fetchSample(irSample, 0); // Read IR sensor data
+                float beaconDirection = irSample[0]; // Direction of beacon (-25 to 25 degrees)
+                float beaconDistance = irSample[1];  // Estimated distance to beacon
 
-                if (beaconDistance > 0 && beaconDistance < 10) { // Close enough to stop
+                if (beaconDistance > 0 && beaconDistance < 10) { // If close enough, stop
                     LCD.clear();
                     LCD.drawString("Base Found!", 0, 2);
                     Sound.beepSequence();
                     Motor.A.stop();
                     Motor.B.stop();
-                    break; // Stay at base
+                    break; // Exit loop (stay at base)
                 } else {
                     // Adjust direction towards beacon
                     if (beaconDirection < -2) {
                         Motor.A.forward();
-                        Motor.B.backward(); // Turn right
+                        Motor.B.backward(); // Turn right toward beacon
                     } else if (beaconDirection > 2) {
                         Motor.A.backward();
-                        Motor.B.forward(); // Turn left
+                        Motor.B.forward(); // Turn left toward beacon
                     } else {
                         Motor.A.forward();
-                        Motor.B.forward(); // Move straight
+                        Motor.B.forward(); // Move straight toward beacon
                     }
-                    Delay.msDelay(300);
+                    Delay.msDelay(300); // Small delay before next check
                 }
             }
         }
 
-        // Close sensors
+        // Close sensors before exiting the program
         colorSensor.close();
         touchSensor.close();
         irSensor.close();
